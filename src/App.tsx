@@ -7,6 +7,7 @@ import { LanguageProvider } from "@/i18n/LanguageContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 
 // Customer Pages
 import Index from "./pages/Index";
@@ -18,6 +19,13 @@ import OrdersPage from "./pages/OrdersPage";
 import AuthPage from "./pages/AuthPage";
 import AboutPage from "./pages/AboutPage";
 import NotFound from "./pages/NotFound";
+
+// Admin Pages
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminMenu from "./pages/admin/AdminMenu";
+import AdminReports from "./pages/admin/AdminReports";
+import AdminCustomers from "./pages/admin/AdminCustomers";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +39,7 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <Routes>
+                {/* Customer Routes */}
                 <Route element={<MainLayout />}>
                   <Route path="/" element={<Index />} />
                   <Route path="/menu" element={<MenuPage />} />
@@ -41,7 +50,16 @@ const App = () => (
                   <Route path="/auth" element={<AuthPage />} />
                   <Route path="/about" element={<AboutPage />} />
                 </Route>
-                {/* Admin routes will be added separately */}
+                
+                {/* Admin Routes */}
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="orders" element={<AdminOrders />} />
+                  <Route path="menu" element={<AdminMenu />} />
+                  <Route path="reports" element={<AdminReports />} />
+                  <Route path="customers" element={<AdminCustomers />} />
+                </Route>
+                
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
