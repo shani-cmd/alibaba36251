@@ -39,6 +39,16 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<OrderWithItems | null>(null);
   const [activeTab, setActiveTab] = useState("active");
+  const [statusDialog, setStatusDialog] = useState<{
+    isOpen: boolean;
+    type: "accept" | "reject" | null;
+    orderId: string | null;
+  }>({ isOpen: false, type: null, orderId: null });
+  const [statusData, setStatusData] = useState({
+    deliveryTime: "",
+    adminNotes: "",
+    rejectionReason: "",
+  });
 
   useEffect(() => {
     fetchOrders();
@@ -61,7 +71,7 @@ export default function AdminOrders() {
             });
             // Play notification sound
             const audio = new Audio("/notification.mp3");
-            audio.play().catch(() => {});
+            audio.play().catch(() => { });
           }
           fetchOrders();
         }
@@ -87,6 +97,47 @@ export default function AdminOrders() {
       toast.error("Failed to load orders");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openStatusDialog = (orderId: string, type: "accept" | "reject") => {
+    setStatusDialog({ isOpen: true, type, orderId });
+    setStatusData({ deliveryTime: "", adminNotes: "", rejectionReason: "" });
+  };
+
+  const handleStatusUpdate = async () => {
+    if (!statusDialog.orderId || !statusDialog.type) return;
+
+    try {
+      const updateData: any = {};
+      let newStatus = "";
+
+      if (statusDialog.type === "accept") {
+        newStatus = "confirmed"; // Or 'preparing', flow suggests confirmed first
+        updateData.status = newStatus;
+        updateData.delivery_time = statusData.deliveryTime;
+        updateData.admin_notes = statusData.adminNotes;
+
+        // If they enter a time, maybe set estimated_time (mins) too? For now just text.
+      } else {
+        newStatus = "cancelled";
+        updateData.status = newStatus;
+        updateData.rejection_reason = statusData.rejectionReason;
+      }
+
+      const { error } = await supabase
+        .from("orders")
+        .update(updateData)
+        .eq("id", statusDialog.orderId);
+
+      if (error) throw error;
+
+      toast.success(`Order ${newStatus} successfully`);
+      setStatusDialog({ isOpen: false, type: null, orderId: null });
+      fetchOrders();
+    } catch (error) {
+      console.error("Error updating order:", error);
+      toast.error("Failed to update order status");
     }
   };
 
@@ -215,11 +266,10 @@ export default function AdminOrders() {
                 return (
                   <Card
                     key={order.id}
-                    className={`border-2 ${
-                      order.status === "pending"
+                    className={`border-2 ${order.status === "pending"
                         ? "border-warning animate-pulse"
                         : "border-border"
-                    }`}
+                      }`}
                   >
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
@@ -264,7 +314,15 @@ export default function AdminOrders() {
                           <Eye className="h-4 w-4 mr-1" />
                           Details
                         </Button>
-                        {nextStatus && (
+                        {nextStatus === "confirmed" ? (
+                          <Button
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => openStatusDialog(order.id, "accept")}
+                          >
+                            Accept Order
+                          </Button>
+                        ) : nextStatus ? (
                           <Button
                             size="sm"
                             className="flex-1"
@@ -272,7 +330,7 @@ export default function AdminOrders() {
                           >
                             Mark {nextStatus}
                           </Button>
-                        )}
+                        ) : null}
                       </div>
 
                       {order.status === "pending" && (
@@ -280,9 +338,9 @@ export default function AdminOrders() {
                           variant="destructive"
                           size="sm"
                           className="w-full"
-                          onClick={() => updateOrderStatus(order.id, "cancelled")}
+                          onClick={() => openStatusDialog(order.id, "reject")}
                         >
-                          Cancel Order
+                          Reject Order
                         </Button>
                       )}
                     </CardContent>
@@ -454,6 +512,70 @@ export default function AdminOrders() {
               </div>
             </ScrollArea>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Status Update Dialog */}
+      <Dialog
+        open={statusDialog.isOpen}
+        onOpenChange={(open) => !open && setStatusDialog({ ...statusDialog, isOpen: false })}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {statusDialog.type === "accept" ? "Accept Order" : "Reject Order"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {statusDialog.type === "accept" ? (
+              <>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Estimated Delivery Time</label>
+                  <input
+                    type="time"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={statusData.deliveryTime}
+                    onChange={(e) => setStatusData({ ...statusData, deliveryTime: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Admin Notes (Optional)</label>
+                  <textarea
+                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Any notes for the customer..."
+                    value={statusData.adminNotes}
+                    onChange={(e) => setStatusData({ ...statusData, adminNotes: e.target.value })}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Reason for Rejection</label>
+                <textarea
+                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Why are you rejecting this order?"
+                  value={statusData.rejectionReason}
+                  onChange={(e) => setStatusData({ ...statusData, rejectionReason: e.target.value })}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setStatusDialog({ ...statusDialog, isOpen: false })}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant={statusDialog.type === "accept" ? "default" : "destructive"}
+              onClick={handleStatusUpdate}
+            >
+              {statusDialog.type === "accept" ? "Confirm Accept" : "Confirm Reject"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

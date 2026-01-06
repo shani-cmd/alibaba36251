@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Package } from 'lucide-react';
+import { Loader2, Package, Clock, MessageSquare, AlertCircle } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
@@ -15,6 +15,9 @@ interface Order {
   total: number;
   order_type: string;
   created_at: string;
+  delivery_time?: string;
+  admin_notes?: string;
+  rejection_reason?: string;
 }
 
 const statusColors: Record<string, string> = {
@@ -137,6 +140,38 @@ const OrdersPage = () => {
                         {t.common.currency}{Number(order.total).toFixed(2)}
                       </span>
                     </div>
+                  </div>
+
+                  {/* Enhanced Order Details */}
+                  <div className="mt-4 space-y-3 border-t pt-4">
+                    {order.delivery_time && (
+                      <div className="flex items-center gap-2 text-blue-600 bg-blue-50 p-2 rounded-md">
+                        <Clock className="h-4 w-4" />
+                        <span className="font-medium">
+                          Estimated Delivery: {order.delivery_time}
+                        </span>
+                      </div>
+                    )}
+
+                    {order.admin_notes && (
+                      <div className="flex items-start gap-2 text-muted-foreground bg-muted/30 p-2 rounded-md">
+                        <MessageSquare className="h-4 w-4 mt-1" />
+                        <div>
+                          <span className="font-medium text-xs uppercase tracking-wider">Restaurant Note:</span>
+                          <p className="text-sm">{order.admin_notes}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {order.status === "cancelled" && order.rejection_reason && (
+                      <div className="flex items-start gap-2 text-destructive bg-destructive/10 p-2 rounded-md">
+                        <AlertCircle className="h-4 w-4 mt-1" />
+                        <div>
+                          <span className="font-medium text-xs uppercase tracking-wider">Cancellation Reason:</span>
+                          <p className="text-sm">{order.rejection_reason}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

@@ -18,11 +18,11 @@ const CheckoutPage = () => {
   const { items, subtotal, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
-  
+
   const [loading, setLoading] = useState(false);
   const [orderType, setOrderType] = useState<'pickup' | 'delivery'>('pickup');
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash'>('cash');
-  
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -44,7 +44,7 @@ const CheckoutPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (items.length === 0) {
       toast.error('Your cart is empty');
       return;
@@ -79,8 +79,9 @@ const CheckoutPage = () => {
         delivery_postal_code: orderType === 'delivery' ? formData.postalCode : null,
         notes: formData.notes || null,
         estimated_time: orderType === 'pickup' ? 20 : 45,
+        order_number: `ORD-${Date.now().toString().slice(-6)}`,
       };
-      
+
       if (user?.id) {
         orderData.user_id = user.id;
       }
@@ -320,8 +321,8 @@ const CheckoutPage = () => {
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">{t.cart.deliveryFee}</span>
                         <span>
-                          {actualDeliveryFee === 0 
-                            ? t.checkout.free 
+                          {actualDeliveryFee === 0
+                            ? t.checkout.free
                             : `${t.common.currency}${actualDeliveryFee.toFixed(2)}`
                           }
                         </span>

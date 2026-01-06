@@ -34,7 +34,7 @@ export function AdminLayout() {
 
   useEffect(() => {
     if (!isLoading && (!user || !isAdmin)) {
-      navigate("/auth");
+      navigate("/admin/login");
     }
   }, [isLoading, user, isAdmin, navigate]);
 
@@ -56,7 +56,7 @@ export function AdminLayout() {
   };
 
   const SidebarContent = () => (
-    <div className="flex h-full flex-col bg-sidebar-background">
+    <div className="flex h-full flex-col bg-sidebar">
       {/* Logo */}
       <div className="flex h-16 items-center border-b border-sidebar-border px-6">
         <Link to="/admin" className="flex items-center gap-2">

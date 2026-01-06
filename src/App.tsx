@@ -21,6 +21,7 @@ import AboutPage from "./pages/AboutPage";
 import NotFound from "./pages/NotFound";
 
 // Admin Pages
+import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminMenu from "./pages/admin/AdminMenu";
@@ -50,8 +51,9 @@ const App = () => (
                   <Route path="/auth" element={<AuthPage />} />
                   <Route path="/about" element={<AboutPage />} />
                 </Route>
-                
+
                 {/* Admin Routes */}
+                <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />
                   <Route path="orders" element={<AdminOrders />} />
@@ -59,7 +61,7 @@ const App = () => (
                   <Route path="reports" element={<AdminReports />} />
                   <Route path="customers" element={<AdminCustomers />} />
                 </Route>
-                
+
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
