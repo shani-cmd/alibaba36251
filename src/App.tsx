@@ -38,7 +38,7 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <BrowserRouter>
+            <BrowserRouter basename="/alibaba36251">
               <Routes>
                 {/* Customer Routes */}
                 <Route element={<MainLayout />}>
